@@ -6,12 +6,11 @@ import "solidity-coverage";
 import "hardhat-deploy";
 import dotenv from "dotenv";
 import yargs from "yargs";
-import { getSingletonFactoryInfo } from "@safe-global/safe-singleton-factory";
 
 const argv = yargs
     .option("network", {
         type: "string",
-        default: "hardhat",
+        default: "airdao",
     })
     .help(false)
     .version(false).argv;
@@ -31,7 +30,10 @@ if (PK) {
     };
 }
 
-if (["mainnet", "rinkeby", "kovan", "goerli", "ropsten", "mumbai", "polygon"].includes(argv.network) && INFURA_KEY === undefined) {
+if (
+    ["mainnet", "rinkeby", "kovan", "goerli", "ropsten", "mumbai", "polygon", "airdao"].includes(argv.network) &&
+    INFURA_KEY === undefined
+) {
     throw new Error(`Could not find Infura key in env, unable to connect to network ${argv.network}`);
 }
 
@@ -44,8 +46,16 @@ import { DeterministicDeploymentInfo } from "hardhat-deploy/dist/types";
 const primarySolidityVersion = SOLIDITY_VERSION || "0.7.6";
 const soliditySettings = SOLIDITY_SETTINGS ? JSON.parse(SOLIDITY_SETTINGS) : undefined;
 
+const airdaoSingletonFactoryInfo = {
+    gasPrice: 0,
+    gasLimit: parseInt("0x018b57", 16),
+    signerAddress: "0x55195DF627f959cE13AFfD39E53780c0E7efd084",
+    transaction: "0xf36ce4f489b66ea7359f18ee7d9bc9ac9b184e941fb7de3ae6e50ffbdb255187",
+    address: "0xF4c03194BB7231ce0151134764EedF93F6d896B8",
+};
+
 const deterministicDeployment = (network: string): DeterministicDeploymentInfo => {
-    const info = getSingletonFactoryInfo(parseInt(network));
+    const info = airdaoSingletonFactoryInfo;
     if (!info) {
         throw new Error(`
         Safe factory not found for network ${network}. You can request a new deployment at https://github.com/safe-global/safe-singleton-factory.
@@ -76,6 +86,10 @@ const userConfig: HardhatUserConfig = {
             blockGasLimit: 100000000,
             gas: 100000000,
             chainId: typeof HARDHAT_CHAIN_ID === "string" && !Number.isNaN(parseInt(HARDHAT_CHAIN_ID)) ? parseInt(HARDHAT_CHAIN_ID) : 31337,
+        },
+        airdao: {
+            ...sharedNetworkConfig,
+            url: NODE_URL,
         },
         mainnet: {
             ...sharedNetworkConfig,
